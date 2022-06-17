@@ -1,0 +1,46 @@
+<launch>
+    <node name="iot_tui_node" pkg="iot_tui" type="iot_tui_node" output="screen">
+
+        <!-- the file of the joystick device (e.g. /dev/input/js0) -->
+        <param name="joystickDevice" value="/dev/input/js0"/>
+
+        <!--
+         If mecanumMode is true, the js_twist_axis will be used for steering,
+         and the js_leftRight_axis for sideways movement.
+         If mecanumMode is false, the js_leftRight_axis will be used for steering,
+         and the js_twist_axis will be ignored.
+        -->
+        <param name="mecanumMode" value="false"/>
+
+        <!--
+         If kb_override is true, keyboard input will override joystick input.
+         If kb_override is false, joystick input will override keyboard input.
+        -->
+        <param name="kb_override" value="true"/>
+
+        <!--
+        to remap the joystick, change the channel numbers here
+        (I recommend using jstest to figure out the current mapping)
+        Buttons are from 0-11 (12 total)
+        -->
+        <param name="js_leftRight_axis"    value="0"/> <!-- default: "turn left/right" -->
+        <param name="js_upDown_axis"       value="1"/> <!-- default: "drive forward/backward" -->
+        <param name="js_twist_axis"        value="2"/> <!-- default: *not used* -->
+        <param name="js_throttle_axis"     value="3"/> <!-- default: "throttle" -->
+        <param name="js_hatLeftRight_axis" value="4"/> <!-- default: *not used* -->
+        <param name="js_hatUpDown_axis"    value="5"/> <!-- default: *not used* -->
+        <param name="js_button_1"  value="0"/>  <!-- default: *not used* -->
+        <param name="js_button_2"  value="10"/>  <!-- default: "enable robot" -->
+        <param name="js_button_3"  value="2"/>  <!-- default: *not used* -->
+        <param name="js_button_4"  value="9"/>  <!-- default: "disable robot" -->
+        <param name="js_button_5"  value="4"/>  <!-- default: *not used* -->
+        <param name="js_button_6"  value="5"/>  <!-- default: *not used* -->
+        <param name="js_button_7"  value="6"/>  <!-- default: *not used* -->
+        <param name="js_button_8"  value="7"/>  <!-- default: *not used* -->
+        <param name="js_button_9"  value="8"/>  <!-- default: *not used* -->
+        <param name="js_button_10" value="1"/> <!-- default: *not used* -->
+        <param name="js_button_11" value="3"/> <!-- default: *not used* -->
+        <param name="js_button_12" value="11"/> <!-- default: *not used* -->
+
+    </node>
+</launch>

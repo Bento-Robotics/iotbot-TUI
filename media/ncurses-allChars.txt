@@ -1,0 +1,56 @@
+       NCURSES EXTENDED CHARACTERS
+Upper left corner         ┌  ACS_ULCORNER
+Lower left corner         └  ACS_LLCORNER
+Upper right corner        ┐  ACS_URCORNER
+Lower right corner        ┘  ACS_LRCORNER
+Tee pointing right        ├  ACS_LTEE
+Tee pointing left         ┤  ACS_RTEE
+Tee pointing up           ┴  ACS_BTEE
+Tee pointing down         ┬  ACS_TTEE
+Horizontal line           ─  ACS_HLINE
+Vertical line             │  ACS_VLINE
+Large Plus or cross over  ┼  ACS_PLUS +
+Scan Line 1               ⎺  ACS_S1
+Scan Line 3               ⎻  ACS_S3
+Scan Line 7               ⎼  ACS_S7
+Scan Line 9               ⎽  ACS_S9
+Diamond                   ◆  ACS_DIAMOND
+Checker board (stipple)   ▒  ACS_CKBOARD
+Degree Symbol             °  ACS_DEGREE
+Plus/Minus Symbol         ±  ACS_PLMINUS
+Bullet                    ·  ACS_BULLET
+Arrow Pointing Left       <  ACS_LARROW
+Arrow Pointing Right      >  ACS_RARROW
+Arrow Pointing Down       v  ACS_DARROW
+Arrow Pointing Up         ^  ACS_UARROW
+Board of squares          #  ACS_BOARD
+Lantern Symbol            ␋  ACS_LANTERN
+Solid Square Block        #  ACS_BLOCK
+Less/Equal sign           ≤  ACS_LEQUAL
+Greater/Equal sign        ≥  ACS_GEQUAL
+Pi                        π  ACS_PI
+Not equal                 ≠  ACS_NEQUAL
+UK pound sign             £  ACS_STERLING
+
+================================================================
+
+RPM 123	◆┬◆ 123 RPM
+RPM 123	◆┴◆ 123 RPM
+
+--------------------------------------------------
+
+  ^ e
+< v >
+
+--------------------------------------------------
+
+{ (5x11)x2 + (1x11)x2 } = 9x25
+┌───────────┬───────────┐
+│           │           │
+│           │           │
+│     +     │     +     │
+│           │           │
+│           │           │
+├───────────┼───────────┤
+│     |     │     |     │
+└───────────┴───────────┘
