@@ -2,7 +2,7 @@
 A control TUI with joystick support for iotbot robots  
 https://github.com/EduArt-Robotik/iotbot  
 
-The TUI with no data.
+The TUI with no data.  
 ![Picture of TUI with no data](media/TUI-notConnected.png)
 
 <br>
