@@ -10,7 +10,7 @@
          If mecanumMode is false, the js_leftRight_axis will be used for steering,
          and the js_twist_axis will be ignored.
         -->
-        <param name="mecanumMode" value="true"/>
+        <param name="mecanumMode" value="false"/>
 
         <!-- enable/disable keyboard controls. Will not display keyboardControls Window if disabled. -->
         <param name="kb_enable" value="true"/>
