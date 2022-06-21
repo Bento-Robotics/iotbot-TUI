@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
     // assign launch file values to launchParams, further elaboration in iot_tui.launch
     nh.getParam("/iot_tui_node/joystickDevice", launchParams.joystickDevice);
     nh.param("/iot_tui_node/mecanumMode", launchParams.mecanumMode, false);
+    nh.param("/iot_tui_node/kb_enable", launchParams.kb_enable, true);
     nh.param("/iot_tui_node/kb_override", launchParams.kb_override, true);
     nh.param("/iot_tui_node/js_leftRight_axis", launchParams.js_leftRight_axis, 0);
     nh.param("/iot_tui_node/js_upDown_axis", launchParams.js_upDown_axis, 1);
@@ -81,7 +82,7 @@ int main(int argc, char **argv) {
     // produce windows!
     rpmWindow = createRPM(0, 0);
     batTextWindow = createBattery(1, 22);
-    ctlKeyboardWindow = createKeyboardControls(10, 10);
+    if (launchParams.kb_enable) ctlKeyboardWindow = createKeyboardControls(10, 10); // only create variable if enabled
     joystickWindowStruct joystickWindows = createJoystick(10, 42);
 
     // produce subscribers and publishers!
@@ -93,14 +94,15 @@ int main(int argc, char **argv) {
         ch = getch(); // read keyboard
         switch (ch) {
 
-            //if e/E is pressed, then exit
+            //if q/Q is pressed, then exit
             case 113:
             case 81:
                 endwin();
                 exit(0);
 
             default:
-                printKeyboardControls(ctlKeyboardWindow, ch); // read and print keyboard values and change global
+                // if enabled, read and print keyboard values and change global values
+                if (launchParams.kb_enable) printKeyboardControls(ctlKeyboardWindow, ch);
                 getJoystickValues(jsFile); // read joystick and change global values
                 publishJoystick(joy_pub); // publish joystick values
                 printJoystick(joystickWindows); // print joystick values
@@ -170,20 +172,20 @@ void printRPM(WINDOW *rpmTextWin, int upL_rpmVal, int upR_rpmVal, int loL_rpmVal
 
 
     // set top left RPM and value
-    if (upL_rpmVal > -1) { mvwprintw(rpmTextWin, 0, 1, "%i", upL_rpmVal); }
-    else { mvwprintw(rpmTextWin, 0, 0, "%i", upL_rpmVal); }
+    if (upL_rpmVal > -1) mvwprintw(rpmTextWin, 0, 1, "%i", upL_rpmVal);
+    else mvwprintw(rpmTextWin, 0, 0, "%i", upL_rpmVal);
 
     // set top right RPM and value
-    if (upR_rpmVal > -1) { mvwprintw(rpmTextWin, 0, 9, "%i", upR_rpmVal); }
-    else { mvwprintw(rpmTextWin, 0, 8, "%i", upR_rpmVal); }
+    if (upR_rpmVal > -1) mvwprintw(rpmTextWin, 0, 9, "%i", upR_rpmVal);
+    else mvwprintw(rpmTextWin, 0, 8, "%i", upR_rpmVal);
 
     // set bottom left RPM and value
-    if (loL_rpmVal > -1) { mvwprintw(rpmTextWin, 1, 1, "%i", loL_rpmVal); }
-    else { mvwprintw(rpmTextWin, 1, 0, "%i", loL_rpmVal); }
+    if (loL_rpmVal > -1) mvwprintw(rpmTextWin, 1, 1, "%i", loL_rpmVal);
+    else mvwprintw(rpmTextWin, 1, 0, "%i", loL_rpmVal);
 
     // set bottom right RPM and value
-    if (loR_rpmVal > -1) { mvwprintw(rpmTextWin, 1, 9, "%i", loR_rpmVal); }
-    else { mvwprintw(rpmTextWin, 1, 8, "%i", loR_rpmVal); }
+    if (loR_rpmVal > -1) mvwprintw(rpmTextWin, 1, 9, "%i", loR_rpmVal);
+    else mvwprintw(rpmTextWin, 1, 8, "%i", loR_rpmVal);
 
     // refresh window to show changes
     wrefresh(rpmTextWin);
@@ -218,7 +220,7 @@ WINDOW *createBattery(int urCornerY, int urCornerX) {
 
     // print top line of battery
     mvwaddch(batFrameWin, 0, 0, ACS_ULCORNER);
-    for (int i = 1; i <= 9; i++) { waddch(batFrameWin, ACS_HLINE); }
+    for (int i = 1; i <= 9; i++) waddch(batFrameWin, ACS_HLINE);
     waddch(batFrameWin, ACS_URCORNER);
     wprintw(batFrameWin, "_");
 
@@ -229,7 +231,7 @@ WINDOW *createBattery(int urCornerY, int urCornerX) {
 
     // print bottom line of battery
     mvwaddch(batFrameWin, 2, 0, ACS_LLCORNER);
-    for (int i = 1; i <= 9; i++) { waddch(batFrameWin, ACS_HLINE); }
+    for (int i = 1; i <= 9; i++) waddch(batFrameWin, ACS_HLINE);
     waddch(batFrameWin, ACS_LRCORNER);
     waddch(batFrameWin, ACS_S1);
 
@@ -245,7 +247,7 @@ void printBattery(WINDOW *batTextWin, float voltage) {
     // initialise attribute inverted color (white background, black chars)
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
 
-    // if Battery voltage is higher than 24V the robot is charging
+    // if Battery voltage is higher than 24V the robot is charging (or the battery is about to explode. JK, BMS exists)
     if (voltage > 24) {
 
         // print charging on a white background
@@ -265,78 +267,76 @@ void printBattery(WINDOW *batTextWin, float voltage) {
     int charge = int(100 * ((voltage - 17) / 7));
 
     // make sure the battery does not go over 100% / under 0% due to imprecise measurement
-    if (charge < 0) { charge = 0; }
-    if (charge > 100) { charge = 100; }
+    if (charge < 0) charge = 0;
+    if (charge > 100) charge = 100;
 
 
     wattron(batTextWin, COLOR_PAIR(1));
     // print the color according to the percentage (fill level)
     switch (charge / 10) {
 
-        case 10: {
+        case 10:
             mvwprintw(batTextWin, 0, 0, "%s%i%%%s", "  ", charge, "   ");
             wattroff(batTextWin, COLOR_PAIR(1));
             break;
-        }
-        case 9: {
+
+        case 9:
             mvwprintw(batTextWin, 0, 0, "%s%i%%%s", "   ", charge, "   ");
             wattroff(batTextWin, COLOR_PAIR(1));
             break;
-        }
-        case 8: {
+
+        case 8:
             mvwprintw(batTextWin, 0, 0, "%s%i%%%s", "   ", charge, "  ");
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, " ");
             break;
-        }
-        case 7: {
+
+        case 7:
             mvwprintw(batTextWin, 0, 0, "%s%i%%%s", "   ", charge, " ");
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, "  ");
             break;
-        }
-        case 6: {
+
+        case 6:
             mvwprintw(batTextWin, 0, 0, "%s%i%%", "   ", charge);
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, "   ");
             break;
-        }
-        case 5: {
+
+        case 5:
             mvwprintw(batTextWin, 0, 0, "%s%i", "   ", charge);
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, "%%   ");
             break;
-        }
-        case 4: {
+
+        case 4:
             mvwprintw(batTextWin, 0, 0, "%s%i\b", "   ", charge);
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, "%i%%   ", charge - 40);
             break;
-        }
-        case 3: {
+
+        case 3:
             mvwprintw(batTextWin, 0, 0, "   ");
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, "%i%%   ", charge);
             break;
-        }
-        case 2: {
+
+        case 2:
             mvwprintw(batTextWin, 0, 0, "  ");
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, " %i%%   ", charge);
             break;
-        }
-        case 1: {
+
+        case 1:
             mvwprintw(batTextWin, 0, 0, " ");
             wattroff(batTextWin, COLOR_PAIR(1));
             wprintw(batTextWin, "  %i%%   ", charge);
             break;
-        }
-        case 0: {
+
+        case 0:
             wattroff(batTextWin, COLOR_PAIR(1));
             mvwprintw(batTextWin, 0, 0, "    %i%%   ", charge);
             break;
-        }
-
     }
 
     // refresh window to show changes
@@ -397,38 +397,36 @@ void printKeyboardControls(WINDOW *ctlTextWin, int character) {
         case 339: // page up
             mvwaddch(ctlTextWin, 0, 4, 101);
             peripheralValues.kb_values[4] = true;
-            peripheralValues.js_buttonValues[10] = true;
-            if (peripheralValues.isEnabled) {
-                peripheralValues.isEnabled = false;
-            } else { peripheralValues.isEnabled = true; }
+            if (peripheralValues.isEnabled) peripheralValues.isEnabled = false;
+            else if (!peripheralValues.isEnabled) peripheralValues.isEnabled = true;
             break;
 
         case 119: // w
-        case KEY_UP: // up arrow
+        case 259: // up arrow
             mvwaddch(ctlTextWin, 0, 2, ACS_UARROW);
             peripheralValues.kb_values[0] = true;
             break;
 
         case 97: // a
-        case KEY_LEFT: // left arrow
+        case 260: // left arrow
             mvwaddch(ctlTextWin, 1, 0, ACS_LARROW);
             peripheralValues.kb_values[1] = true;
             break;
 
         case 115: // s
-        case KEY_DOWN: // down arrow
+        case 258: // down arrow
             mvwaddch(ctlTextWin, 1, 2, ACS_DARROW);
             peripheralValues.kb_values[2] = true;
             break;
 
         case 100: // d
-        case KEY_RIGHT: // right arrow
+        case 261: // right arrow
             mvwaddch(ctlTextWin, 1, 4, ACS_RARROW);
             peripheralValues.kb_values[3] = true;
             break;
 
 
-        default: {
+        default:
             wattroff(ctlTextWin, COLOR_PAIR(1));
             mvwaddch(ctlTextWin, 0, 2, ACS_UARROW);
             mvwaddch(ctlTextWin, 0, 4, 101);
@@ -441,7 +439,6 @@ void printKeyboardControls(WINDOW *ctlTextWin, int character) {
             peripheralValues.kb_values[3] = false;
             peripheralValues.kb_values[4] = false;
             peripheralValues.kb_isPressed = false;
-        }
     }
 
     wattroff(ctlTextWin, COLOR_PAIR(1));
@@ -456,50 +453,48 @@ void printKeyboardControls(WINDOW *ctlTextWin, int character) {
 
 void publishJoystick(const ros::Publisher &joystick_pub) {
 
-    // structs for ROS joystick publisher
+    // struct for ROS joystick publisher
     sensor_msgs::Joy rosJoyValues = sensor_msgs::Joy();
 
     // set the header's values
     rosJoyValues.header.stamp = ros::Time::now(); // set header time to current time
     rosJoyValues.header.frame_id = "joy";
 
-    // declare size of joystick value array
-    rosJoyValues.axes = {0, 0, 0, 0, 0, 0};
-    rosJoyValues.buttons = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    // if Keyboard is pressed and kb_override is true
-    if (peripheralValues.kb_isPressed && launchParams.kb_override) {
+    // fill arrays with -0.0 / 0. Only "new" values are transmitted, so we have to add our own 0's
+    rosJoyValues.axes.assign(6, -0.0);
+    rosJoyValues.buttons.assign(12, 0);
 
+    // if Keyboard is enabled, pressed and kb_override is true
+    if (launchParams.kb_enable && peripheralValues.kb_isPressed && launchParams.kb_override) {
         // publish keyboard values
 
-        if (peripheralValues.kb_values[0]) rosJoyValues.axes[0] = 1.0;
-        if (peripheralValues.kb_values[1]) rosJoyValues.axes[1] = 1.0;
-        if (peripheralValues.kb_values[2]) rosJoyValues.axes[0] = -1.0;
-        if (peripheralValues.kb_values[3]) rosJoyValues.axes[1] = -1.0;
+        // insert local values to rosJoyValues
+        if (peripheralValues.kb_values[0]) rosJoyValues.axes[1] = 1.0;
+        if (peripheralValues.kb_values[1]) rosJoyValues.axes[0] = 1.0;
+        if (peripheralValues.kb_values[2]) rosJoyValues.axes[1] = -1.0;
+        if (peripheralValues.kb_values[3]) rosJoyValues.axes[0] = -1.0;
+
+        // as long as peripheralValues.isEnabled is true, keep telling the robot to enable, if false disable robot
+        if (peripheralValues.isEnabled) rosJoyValues.buttons[10] = 1;
+        else if (!peripheralValues.isEnabled) rosJoyValues.buttons[9] = 1;
+
 
     } else {
-
         // publish joystick values
 
-        // set all js_axisValues to ROS axis values
-        for (int i = 0; i < 6; i++) {
+        // map all js_axisValues to -1 ─ 1 and insert them
+        for (int i = 0; i < 6; i++) rosJoyValues.axes[i] = (peripheralValues.js_axisValues[i] / -32767);
 
-            rosJoyValues.axes.insert( // set values of publisher axes (using "=" results in a segfault)
-                    rosJoyValues.axes.begin() + i, // get the starting point of the array and add counter i
-                    -2 * (peripheralValues.js_axisValues[i] / 65534)); // map to -1 ─ 1
-        }
+        // insert all js_buttonValues into rosJoyValues
+        for (int i = 0; i < 12; i++) rosJoyValues.buttons[i] = peripheralValues.js_buttonValues[i];
 
-        // set all js_buttonValues to ROS button values
-        peripheralValues.js_buttonValues[1] = true;
-        for (int i = 0; i < 12; i++) {
-            // again, setting values with "=" results in a segfault, so we need to use insert, and begin to get the start of the array
-            rosJoyValues.buttons.insert(rosJoyValues.buttons.begin() + i, peripheralValues.js_buttonValues[i]);
-        }
+        // as long as peripheralValues.isEnabled is true, keep telling the robot to enable, if false disable robot
+        if (peripheralValues.isEnabled) rosJoyValues.buttons[10] = 1;
+        else if (!peripheralValues.isEnabled) rosJoyValues.buttons[9] = 1;
+
+
     }
-
-    // as long as peripheralValues.isEnabled is true, keep telling the robot to enable
-    if (peripheralValues.isEnabled) rosJoyValues.buttons[10] = 1;
-
     // actually publish values
     joystick_pub.publish(rosJoyValues);
 }
@@ -567,10 +562,10 @@ void printJoystick(joystickWindowStruct joystickWins) {
 
     int percentages[6];
 
-    // if Keyboard is pressed and kb_override is true
-    if (peripheralValues.kb_isPressed && launchParams.kb_override) {
+    // if Keyboard is enabled, pressed and kb_override is true
+    if (launchParams.kb_enable && peripheralValues.kb_isPressed && launchParams.kb_override) {
 
-        // publish keyboard values
+        // use keyboard values
 
         percentages[0] = 20;
         percentages[1] = 20;
@@ -585,16 +580,13 @@ void printJoystick(joystickWindowStruct joystickWins) {
 
     } else {
 
-        // publish joystick values
+        // use joystick values
 
-        for (int i = 0; i <= 5; i++) {
+        for (int i = 0; i <= 5; i++)
+            // map from -32767 ─ 32767 to 0 ─ 40, as 40 can be divided through 4 and 10, thus directly converted into window coordinates
             // (to_high - to_low) * ((value - from_low) / (from_high - from_low))
             //(40 - 0) * ((peripheralValues.js_axisValues[i] - -32767) / (32767 - -32767))
             percentages[i] = int(40 * ((peripheralValues.js_axisValues[i] + 32767) / 65534));
-            // map from -32767 ─ 32767 to 0 ─ 40
-
-            // 40 can be divided through 4 and 10, thus directly converted into window coordinates
-        }
     }
 
     // clear the axis_UL_win, then print values, then refresh
@@ -667,6 +659,7 @@ void getJoystickValues(int jsFile) {
         switch (joystickEvent.type) {
 
             case 0x01: // button pressed/released
+                // apply remaps to buttons
                 peripheralValues.js_buttonValues[launchParams.js_buttons[joystickEvent.number]] = joystickEvent.value;
                 if (joystickEvent.number == 1) peripheralValues.isEnabled = true;
                 if (joystickEvent.number == 3) peripheralValues.isEnabled = false;
@@ -674,7 +667,7 @@ void getJoystickValues(int jsFile) {
 
             case 0x02: // axis moved
 
-                switch (joystickEvent.number) { // this needs to be this long for remapping support
+                switch (joystickEvent.number) { // assign and remap incoming values to corresponding peripheralValues js_axis
 
                     case 0:
                         peripheralValues.js_axisValues[launchParams.js_leftRight_axis] = joystickEvent.value;
@@ -701,16 +694,6 @@ void getJoystickValues(int jsFile) {
                         break;
                 }
                 break;
-
         }
     }
 }
-
-
-
-
-
-//  ┌──── → X
-//  │
-//  ↓
-//  Y

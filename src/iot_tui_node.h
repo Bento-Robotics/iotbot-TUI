@@ -21,6 +21,7 @@ struct launchParams {
     // If it is false, steering will be the js_leftRight_axis and
     // the js_twist_axis will be ignored.
     bool mecanumMode{};
+    bool kb_enable{}; // enable/disable keyboard controls. Will not display keyboardControls Window if disabled.
     bool kb_override{}; // If kb_override is true, keyboard input will override Joystick input. Vice versa if false.
 
     int js_leftRight_axis{}; // change values in iot_tui.launch to remap joystick
@@ -43,10 +44,10 @@ struct joystickWindowStruct {
 };
 
 
-// TODO find a less restrictive way of storing keyboard values vvv
+// TODO find a less restrictive way of storing keyboard values ↓↓↓
 
 // declare struct peripheralValues to save peripheral values
-struct {
+struct peripheralValues {
     float js_axisValues[6]; // array for joystick axis values
     bool js_buttonValues[12]; // array for joystick button values
 
@@ -187,7 +188,7 @@ void printJoystick(joystickWindowStruct);
  */
 void getJoystickValues(int);
 
-// publish values from joystickValuesStruct to ros::Publisher
+// parse, remap and publish values from peripheralValues to ros::Publisher
 void publishJoystick(const ros::Publisher &);
 
 

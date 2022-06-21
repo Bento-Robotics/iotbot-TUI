@@ -10,7 +10,10 @@
          If mecanumMode is false, the js_leftRight_axis will be used for steering,
          and the js_twist_axis will be ignored.
         -->
-        <param name="mecanumMode" value="false"/>
+        <param name="mecanumMode" value="true"/>
+
+        <!-- enable/disable keyboard controls. Will not display keyboardControls Window if disabled. -->
+        <param name="kb_enable" value="true"/>
 
         <!--
          If kb_override is true, keyboard input will override joystick input.
